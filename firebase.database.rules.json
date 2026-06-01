@@ -1,0 +1,30 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "rooms": {
+      "$roomCode": {
+        ".read": "auth != null",
+        ".write": "auth != null && (!data.exists() || data.child('hostId').val() === auth.uid)",
+        ".validate": "newData.hasChildren(['hostId', 'status', 'createdAt', 'maxPlayers']) && newData.child('maxPlayers').val() === 30",
+        "players": {
+          ".validate": "newData.childrenCount() <= 30",
+          "$playerId": {
+            ".read": "auth != null",
+            ".write": "auth != null && (($playerId === auth.uid && root.child('rooms').child($roomCode).child('phase').val() === 'lobby') || root.child('rooms').child($roomCode).child('hostId').val() === auth.uid)",
+            ".validate": "newData.hasChildren(['id', 'nickname', 'score', 'joinedAt', 'connected']) && newData.child('id').val() === $playerId && newData.child('nickname').isString() && newData.child('nickname').val().length <= 24"
+          }
+        },
+        "answers": {
+          "$questionId": {
+            "$playerId": {
+              ".read": "auth != null",
+              ".write": "auth != null && ($playerId === auth.uid || root.child('rooms').child($roomCode).child('hostId').val() === auth.uid)",
+              ".validate": "newData.hasChildren(['playerId', 'questionId', 'selectedIndex', 'submittedAt']) && newData.child('playerId').val() === $playerId && newData.child('questionId').val() === $questionId"
+            }
+          }
+        }
+      }
+    }
+  }
+}
